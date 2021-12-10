@@ -1,0 +1,119 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "User to push up the container image and invoke the Lambda function",
+  "Parameters": {
+    "RegistryStackName": {
+      "Description": "The name of the stack that created the ECR repository",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "User": {
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "UserName": "nodejs-docker-lambda"
+      }
+    },
+    "UserPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "Users": [
+          {
+            "Ref": "User"
+          }
+        ],
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ecr:GetAuthorizationToken"
+              ],
+              "Resource": [
+                "*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "ecr:BatchGetImage",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:CompleteLayerUpload",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:InitiateLayerUpload",
+                "ecr:PutImage",
+                "ecr:UploadLayerPart"
+              ],
+              "Resource": [
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": "${RegistryStackName}-RepositoryARN"
+                  }
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:InvokeFunction"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    ":",
+                    [
+                      "arn:aws:lambda",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      "function:nodejs-docker-lambda*"
+                    ]
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "PolicyName": "nodejs-docker-lambda"
+      }
+    },
+    "AccessKey": {
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "UserName": {
+          "Ref": "User"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "AccessKey": {
+      "Description": "The access key",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-AccessKey"
+        }
+      },
+      "Value": {
+        "Ref": "AccessKey"
+      }
+    },
+    "SecretAccessKey": {
+      "Description": "The secret access key",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-SecretAccessKey"
+        }
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "AccessKey",
+          "SecretAccessKey"
+        ]
+      }
+    }
+  }
+}

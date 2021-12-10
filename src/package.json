@@ -1,0 +1,18 @@
+{
+  "name": "@danielhelen/nodejs-docker-lambda",
+  "version": "1.0.0",
+  "description": "A function written in Node.js deployed to AWS Lambda as a container image",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Daniel Helen"
+  },
+  "scripts": {
+    "start": "yarn build-image && yarn run-container",
+    "build-image": "docker build -t nodejs-docker-lambda .",
+    "run-container": "docker run -p 9000:8080 nodejs-docker-lambda:latest"
+  },
+  "dependencies": {
+    "uuid": "^8.3.2"
+  }
+}

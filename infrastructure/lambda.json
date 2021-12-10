@@ -1,0 +1,89 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Lambda function that uses a Docker image container",
+  "Parameters": {
+    "ImageUri": {
+      "Description": "The URI of the image in AWS ECR",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "FunctionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ]
+      }
+    },
+    "LambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "PackageType": "Image",
+        "Code": {
+          "ImageUri": {
+            "Ref": "ImageUri"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "FunctionRole",
+            "Arn"
+          ]
+        },
+        "Timeout": 10
+      }
+    },
+    "LogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${LambdaFunction}"
+        },
+        "RetentionInDays": 30
+      }
+    }
+  },
+  "Outputs": {
+    "LambdaARN": {
+      "Description": "ARN of the Lambda function",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-LambdaARN"
+        }
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "LambdaFunction",
+          "Arn"
+        ]
+      }
+    },
+    "LambdaName": {
+      "Description": "Name of the Lambda function",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-LambdaName"
+        }
+      },
+      "Value": {
+        "Ref": "LambdaFunction"
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "ECR repository to store the container image",
+  "Resources": {
+    "Repository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        },
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "ImageTagMutability": "MUTABLE",
+        "RepositoryName": "nodejs-docker-lambda"
+      }
+    }
+  },
+  "Outputs": {
+    "RepositoryARN": {
+      "Description": "The ARN of the repository",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-RepositoryARN"
+        }
+      },
+      "Value": {
+        "Fn::GetAtt": [
+          "Repository",
+          "Arn"
+        ]
+      }
+    }
+  }
+}
